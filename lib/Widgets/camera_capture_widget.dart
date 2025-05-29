@@ -13,8 +13,9 @@ class CameraCaptureWidget extends StatefulWidget {
 }
 
 class _CameraCaptureWidgetState extends State<CameraCaptureWidget> {
-  late CameraController _controller;
-  Future<void>? _initializeControllerFuture;
+  CameraController? _controller;
+  bool _isCameraReady = false;
+  String? _errorMessage;
   final Logger _logger = Logger();
 
   @override
@@ -28,7 +29,10 @@ class _CameraCaptureWidgetState extends State<CameraCaptureWidget> {
       final cameras = await availableCameras();
 
       if (cameras.isEmpty) {
-        _logger.e('Nenhuma câmera disponível');
+        setState(() {
+          _errorMessage = 'Nenhuma câmera disponível.';
+        });
+        _logger.e(_errorMessage);
         return;
       }
 
@@ -37,76 +41,91 @@ class _CameraCaptureWidgetState extends State<CameraCaptureWidget> {
       _controller = CameraController(
         firstCamera,
         ResolutionPreset.high,
-        enableAudio: false,  // Como só quer foto, pode desligar áudio
+        enableAudio: false,
       );
 
-      _initializeControllerFuture = _controller.initialize();
-      await _initializeControllerFuture;
+      await _controller!.initialize();
 
-      if (mounted) setState(() {});
+      if (!mounted) return;
+
+      setState(() {
+        _isCameraReady = true;
+      });
+
       _logger.i('Câmera inicializada com sucesso');
     } catch (e, stacktrace) {
-      _logger.e('Erro ao inicializar a câmera', error: e, stackTrace: stacktrace);
+      setState(() {
+        _errorMessage = 'Erro ao inicializar a câmera.';
+      });
+      _logger.e(_errorMessage, error: e, stackTrace: stacktrace);
     }
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _controller?.dispose();
     super.dispose();
   }
 
   Future<void> _capturePhoto() async {
+    if (_controller == null || !_controller!.value.isInitialized) {
+      _logger.w('Controller não está inicializado');
+      return;
+    }
+
     try {
-      if (_initializeControllerFuture == null) {
-        _logger.w('Câmera não inicializada ainda');
-        return;
-      }
-
-      await _initializeControllerFuture;
-
-      if (!_controller.value.isInitialized) {
-        _logger.w('Controller não está inicializado');
-        return;
-      }
-
-      final image = await _controller.takePicture();
-
+      final image = await _controller!.takePicture();
       _logger.i('Imagem capturada: ${image.path}');
       widget.onImageCaptured(File(image.path));
     } catch (e, stacktrace) {
       _logger.e('Erro ao capturar foto', error: e, stackTrace: stacktrace);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Erro ao capturar a foto')),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<void>(
-      future: _initializeControllerFuture,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.done) {
-          if (!_controller.value.isInitialized) {
-            return const Center(child: Text('Falha ao inicializar câmera'));
-          }
-          return Stack(
-            alignment: Alignment.bottomCenter,
-            children: [
-              CameraPreview(_controller),
-              Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: FloatingActionButton(
-                  onPressed: _capturePhoto,
-                  child: const Icon(Icons.camera_alt),
-                ),
-              ),
-            ],
-          );
-        } else if (snapshot.hasError) {
-          return Center(child: Text('Erro ao inicializar câmera: ${snapshot.error}'));
-        } else {
-          return const Center(child: CircularProgressIndicator());
-        }
-      },
+    if (_errorMessage != null) {
+      return Center(
+        child: Text(
+          _errorMessage!,
+          style: const TextStyle(color: Colors.red, fontSize: 16),
+          textAlign: TextAlign.center,
+        ),
+      );
+    }
+
+    if (!_isCameraReady || _controller == null || !_controller!.value.isInitialized) {
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(height: 16),
+            Text(
+              'Inicializando a câmera...',
+              style: TextStyle(color: Colors.white),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Stack(
+      alignment: Alignment.bottomCenter,
+      children: [
+        CameraPreview(_controller!),
+        Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: FloatingActionButton(
+            tooltip: 'Capturar Foto',
+            onPressed: _capturePhoto,
+            child: const Icon(Icons.camera_alt),
+          ),
+        ),
+      ],
     );
   }
 }

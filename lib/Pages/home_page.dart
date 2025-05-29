@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import '../widgets/camera_capture_widget.dart'; // seu widget de câmera
+import '../widgets/camera_capture_widget.dart';
 import 'dart:io';
 
-import 'analyzer_page.dart'; // importe a página de análise
+import 'analyzer_page.dart';
+import 'history_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -15,18 +16,14 @@ class _HomePageState extends State<HomePage> {
   bool _showCamera = false;
 
   void _onImageCaptured(File image) {
-    // Navega para a página de análise passando a imagem e callback para voltar
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => AnalyzerPage(
           imageFile: image,
-          onRetakePhoto: () {
-            Navigator.of(context).pop();
-          },
         ),
       ),
     );
-    // Fecha a câmera para evitar manter na pilha (opcional)
+
     setState(() {
       _showCamera = false;
     });
@@ -36,6 +33,14 @@ class _HomePageState extends State<HomePage> {
     setState(() {
       _showCamera = true;
     });
+  }
+
+  void _openHistory() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => const HistoryPage(),
+      ),
+    );
   }
 
   @override
@@ -59,23 +64,45 @@ class _HomePageState extends State<HomePage> {
       body: _showCamera
           ? CameraCaptureWidget(onImageCaptured: _onImageCaptured)
           : Center(
-              child: ElevatedButton(
-                onPressed: _openCamera,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFD1C7B8),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ElevatedButton(
+                    onPressed: _openCamera,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFD1C7B8),
+                      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    child: const Text(
+                      'Abrir Câmera',
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontSize: 18,
+                      ),
+                    ),
                   ),
-                ),
-                child: const Text(
-                  'Abrir Câmera',
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontSize: 18,
+                  const SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: _openHistory,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFD1C7B8),
+                      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    child: const Text(
+                      'Ver Histórico',
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontSize: 18,
+                      ),
+                    ),
                   ),
-                ),
+                ],
               ),
             ),
     );

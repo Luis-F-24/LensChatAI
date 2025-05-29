@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'dart:io';
-
-import 'openai_service.dart';
-import 'tts_helper.dart';
+import 'package:hive/hive.dart';
+import '../Widgets/history_entry.dart';
+import '../Widgets/openai_service.dart';
+import '../Widgets/tts_helper.dart';
 
 class ImageAnalyzerWidget extends StatefulWidget {
   final File imageFile;
@@ -25,8 +26,19 @@ class _ImageAnalyzerWidgetState extends State<ImageAnalyzerWidget> {
     super.dispose();
   }
 
+  Future<void> _saveToHistory(String description) async {
+    final box = Hive.box<HistoryEntry>('history');
+    final entry = HistoryEntry(
+      imagePath: widget.imageFile.path,
+      description: description,
+      date: DateTime.now(),
+    );
+    await box.add(entry);
+  }
+
   Future<void> _analyzeImage() async {
     if (_analyzed) return;  // ✅ Evita múltiplas execuções
+
     setState(() {
       _isLoading = true;
     });
@@ -41,6 +53,7 @@ class _ImageAnalyzerWidgetState extends State<ImageAnalyzerWidget> {
 
     if (description != null) {
       await _ttsHelper.speak(description);
+      await _saveToHistory(description);  // ✅ Salva no histórico após análise bem-sucedida
     }
   }
 
@@ -56,7 +69,7 @@ class _ImageAnalyzerWidgetState extends State<ImageAnalyzerWidget> {
       children: [
         Image.file(
           widget.imageFile,
-          fit: BoxFit.contain,  // ✅ Melhor adaptação
+          fit: BoxFit.contain,
           height: 300,
         ),
         const SizedBox(height: 20),
@@ -67,10 +80,12 @@ class _ImageAnalyzerWidgetState extends State<ImageAnalyzerWidget> {
                 child: Text(
                   _description ?? 'Analisando imagem...',
                   style: const TextStyle(fontSize: 16, color: Colors.white),
-                  textAlign: TextAlign.center,  // ✅ Melhor visual
+                  textAlign: TextAlign.center,
                 ),
               ),
-        if (!_isLoading && _description != null && _description == 'Não foi possível obter a descrição.')
+        if (!_isLoading &&
+            _description != null &&
+            _description == 'Não foi possível obter a descrição.')
           ElevatedButton(
             onPressed: () {
               setState(() {
