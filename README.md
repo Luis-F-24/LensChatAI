@@ -1,16 +1,22 @@
-# lenschatai
+# LensChatAI
 
-A new Flutter project.
+## Objetivo e Descrição da Solução
+O LensChatAI é um aplicativo Flutter que utiliza inteligência artificial para analisar imagens capturadas pela câmera, oferecendo funcionalidades avançadas como reconhecimento de objetos e interação por voz. O objetivo é proporcionar uma experiência intuitiva e eficiente para usuários que buscam integrar recursos de visão computacional e IA em um app móvel.
 
-## Getting Started
+## Tecnologias Utilizadas
+- Flutter (Dart) para desenvolvimento do app mobile
+- TensorFlow Lite para reconhecimento de objetos em tempo real
+- Flutter Dotenv para gerenciamento seguro de variáveis de ambiente
+- Permission Handler para gerenciamento de permissões em dispositivos móveis
 
-This project is a starting point for a Flutter application.
+## Como Instalar e Executar o Projeto
 
-A few resources to get you started if this is your first Flutter project:
+### Pré-requisitos
+- Flutter SDK instalado ([https://flutter.dev/docs/get-started/install](https://flutter.dev/docs/get-started/install))
+- Git instalado ([https://git-scm.com/downloads](https://git-scm.com/downloads))
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+### Passos para instalação
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+1. Clone o repositório:
+```bash
+git clone https://github.com/Luis-F-24/LensChatAI.git
