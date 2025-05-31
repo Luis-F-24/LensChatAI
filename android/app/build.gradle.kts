@@ -21,7 +21,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.lenschatai"
-        minSdk = flutter.minSdkVersion
+        minSdk = 21
         targetSdk = 35
         versionCode = flutter.versionCode
         versionName = flutter.versionName

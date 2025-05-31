@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:io';
-
 import '../widgets/image_analyzer_widget.dart';
-import 'history_page.dart';
 import 'home_page.dart';
 
 class AnalyzerPage extends StatelessWidget {
@@ -10,15 +8,9 @@ class AnalyzerPage extends StatelessWidget {
 
   const AnalyzerPage({super.key, required this.imageFile});
 
-  void _retakePhoto(BuildContext context) {
+  void _onRetakePhoto(BuildContext context) {
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(builder: (_) => const HomePage()),
-    );
-  }
-
-  void _openHistory(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const HistoryPage()),
     );
   }
 
@@ -48,29 +40,14 @@ class AnalyzerPage extends StatelessWidget {
         padding: const EdgeInsets.all(16.0),
         child: ImageAnalyzerWidget(imageFile: imageFile),
       ),
-      floatingActionButton: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          FloatingActionButton.extended(
-            onPressed: () => _retakePhoto(context),
-            backgroundColor: const Color(0xFFD1C7B8),
-            label: const Text(
-              'Tirar outra foto',
-              style: TextStyle(color: Colors.black),
-            ),
-            icon: const Icon(Icons.camera_alt, color: Colors.black),
-          ),
-          const SizedBox(height: 12),
-          FloatingActionButton.extended(
-            onPressed: () => _openHistory(context),
-            backgroundColor: const Color(0xFFD1C7B8),
-            label: const Text(
-              'Ver Histórico',
-              style: TextStyle(color: Colors.black),
-            ),
-            icon: const Icon(Icons.history, color: Colors.black),
-          ),
-        ],
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => _onRetakePhoto(context),
+        backgroundColor: const Color(0xFFD1C7B8),
+        label: const Text(
+          'Tirar outra foto',
+          style: TextStyle(color: Colors.black),
+        ),
+        icon: const Icon(Icons.camera_alt, color: Colors.black),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );

@@ -1,80 +1,96 @@
+// Seu arquivo api_service.dart (ou onde analyzeImageWithGemini está)
+
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:logger/logger.dart';
 
-import '../config.dart';  // ✅ Importa a chave de configuração
+import '../config.dart';
 
-final Logger _logger = Logger();  // ✅ Instância global do Logger
+final Logger _logger = Logger();
 
-/// Limite máximo de tamanho da imagem: 5MB
-const int maxImageSizeInBytes = 5 * 1024 * 1024;
+const int maxImageSizeInBytes = 4 * 1024 * 1024; // 4MB
 
-/// Analisa uma imagem utilizando a API do OpenAI.
-Future<String?> analyzeImageWithOpenAI(File imageFile) async {
+Future<String?> analyzeImageWithGemini(File imageFile) async {
   try {
-    // ✅ Verifica o tamanho da imagem antes de enviar.
     final int imageSize = imageFile.lengthSync();
     _logger.i('Tamanho da imagem: $imageSize bytes');
 
     if (imageSize > maxImageSizeInBytes) {
       _logger.w('Imagem muito grande para análise: $imageSize bytes');
-      return 'Imagem muito grande para análise. Por favor, tente com uma imagem menor que 5MB.';
+      return 'Imagem muito grande para análise. Por favor, tente com uma imagem menor que 4MB.';
     }
 
     final bytes = await imageFile.readAsBytes();
     final base64Image = base64Encode(bytes);
 
+    // ✅ Melhorias no 'contents' e 'generationConfig'
     final response = await http.post(
-      Uri.parse('https://api.openai.com/v1/chat/completions'),
+      Uri.parse('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=$geminiKey'),
       headers: {
-        'Authorization': 'Bearer $openAIKey',
         'Content-Type': 'application/json',
       },
       body: jsonEncode({
-        "model": "gpt-4o",
-        "messages": [
+        "contents": [
           {
-            "role": "system",
-            "content": "Você é um assistente que descreve imagens de forma concisa."
-          },
-          {
-            "role": "user",
-            "content": [
-              {"type": "text", "text": "Descreva brevemente esta imagem:"},
+            "parts": [
+              // ✅ Novo System Prompt: Guia o modelo sobre seu papel e tom
+              {"text": "Você é um assistente de inteligência artificial otimizado para descrever o conteúdo de imagens de forma clara, concisa e precisa. Suas respostas devem ser sempre em português brasileiro. Foque em identificar objetos, pessoas, ações e o ambiente principal da imagem."},
+              // ✅ Novo User Prompt: Detalha o que se espera na descrição
+              {"text": "Descreva a imagem que você vai receber. Crie uma descrição direta, com 1 a 3 frases, destacando os elementos visuais mais relevantes e o contexto geral."},
               {
-                "type": "image_url",
-                "image_url": "data:image/jpeg;base64,$base64Image"
+                "inlineData": {
+                  "mimeType": "image/jpeg",
+                  "data": base64Image
+                }
               }
             ]
           }
         ],
-        "max_tokens": 200
+        "generationConfig": {
+          "maxOutputTokens": 150, // ✅ Ajustado para promover concisão, mas com algum detalhe
+          "temperature": 0.4,     // ✅ Adicionado: Controla a aleatoriedade. Valor baixo para respostas mais focadas.
+          "topP": 1.0,            // ✅ Adicionado: Top P sampling. Comum de se usar com temperature.
+          "topK": 32,             // ✅ Adicionado: Top K sampling. Comum de se usar com temperature.
+        }
       }),
     );
 
     _logger.i('Status da resposta: ${response.statusCode}');
+    _logger.d('Corpo da resposta: ${response.body}'); // Adicionado para depuração detalhada
 
     if (response.statusCode == 200) {
       final decoded = jsonDecode(response.body);
-      final content = decoded['choices'][0]['message']['content'];
-      _logger.i('Descrição recebida: $content');
-      return content;
+      // ✅ Adicionado verificação de 'candidates' e 'content'
+      if (decoded['candidates'] != null && decoded['candidates'].isNotEmpty) {
+        final content = decoded['candidates'][0]['content']['parts'][0]['text'];
+        _logger.i('Descrição recebida: $content');
+        return content;
+      } else {
+        _logger.w('Resposta da API não contém "candidates" ou "content".');
+        return 'Não foi possível gerar uma descrição para a imagem.';
+      }
+    } else if (response.statusCode == 400) {
+      _logger.w('Requisição inválida (Erro do cliente): ${response.body}');
+      return 'Erro na requisição (400): ${response.body}. Verifique o formato da sua requisição ou a imagem.';
+    } else if (response.statusCode == 403) {
+      _logger.w('Acesso negado (Chave inválida/problema de permissão): ${response.body}');
+      return 'Acesso à API negado (403). Verifique se sua chave de API está correta e tem as permissões necessárias.';
     } else if (response.statusCode == 429) {
       _logger.w('Quota excedida: ${response.body}');
-      return 'Limite de uso da API excedido. Por favor, tente novamente mais tarde ou verifique seus créditos na OpenAI.';
-    } else if (response.statusCode == 403) {
-      _logger.w('Acesso negado: ${response.body}');
-      return 'Acesso à API negado. Verifique se sua chave de API está ativa e se há créditos disponíveis.';
+      return 'Limite de uso da API excedido (429). Por favor, tente novamente mais tarde ou verifique seus créditos no Google Cloud.';
+    } else if (response.statusCode >= 500) { // Erros de servidor
+      _logger.e('Erro interno do servidor (${response.statusCode}): ${response.body}');
+      return 'Erro interno do servidor (${response.statusCode}). Por favor, tente novamente mais tarde.';
     } else {
-      _logger.e('Erro na resposta: ${response.statusCode} - ${response.body}');
-      return 'Erro: ${response.statusCode} - ${response.body}';
+      _logger.e('Erro inesperado na resposta: ${response.statusCode} - ${response.body}');
+      return 'Erro inesperado: ${response.statusCode} - ${response.body}';
     }
   } on SocketException catch (e) {
     _logger.w('Sem conexão com a internet: $e');
     return 'Sem conexão com a internet. Por favor, verifique sua conexão e tente novamente.';
   } catch (e, stacktrace) {
-    _logger.e('Erro ao enviar imagem: $e', error: e, stackTrace: stacktrace);
+    _logger.e('Erro inesperado ao enviar imagem: $e', error: e, stackTrace: stacktrace);
     return 'Erro inesperado ao enviar imagem: $e';
   }
 }

@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'dart:io';
-import 'package:hive/hive.dart';
-import '../Widgets/history_entry.dart';
 import '../Widgets/openai_service.dart';
 import '../Widgets/tts_helper.dart';
+import '../Pages/home_page.dart';
 
 class ImageAnalyzerWidget extends StatefulWidget {
   final File imageFile;
@@ -26,24 +25,20 @@ class _ImageAnalyzerWidgetState extends State<ImageAnalyzerWidget> {
     super.dispose();
   }
 
-  Future<void> _saveToHistory(String description) async {
-    final box = Hive.box<HistoryEntry>('history');
-    final entry = HistoryEntry(
-      imagePath: widget.imageFile.path,
-      description: description,
-      date: DateTime.now(),
+  void _onRetakePhoto() {
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(builder: (_) => const HomePage()),
     );
-    await box.add(entry);
   }
 
   Future<void> _analyzeImage() async {
-    if (_analyzed) return;  // ✅ Evita múltiplas execuções
+    if (_analyzed) return; // ✅ Evita múltiplas execuções
 
     setState(() {
       _isLoading = true;
     });
 
-    final description = await analyzeImageWithOpenAI(widget.imageFile);
+    final description = await analyzeImageWithGemini(widget.imageFile);
 
     setState(() {
       _description = description ?? 'Não foi possível obter a descrição.';
@@ -53,7 +48,6 @@ class _ImageAnalyzerWidgetState extends State<ImageAnalyzerWidget> {
 
     if (description != null) {
       await _ttsHelper.speak(description);
-      await _saveToHistory(description);  // ✅ Salva no histórico após análise bem-sucedida
     }
   }
 
@@ -89,12 +83,27 @@ class _ImageAnalyzerWidgetState extends State<ImageAnalyzerWidget> {
           ElevatedButton(
             onPressed: () {
               setState(() {
-                _analyzed = false;  // ✅ Permite nova tentativa
+                _analyzed = false; // ✅ Permite nova tentativa
               });
               _analyzeImage();
             },
             child: const Text('Tentar novamente'),
           ),
+        const SizedBox(height: 20),
+        ElevatedButton(
+          onPressed: _onRetakePhoto,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFFD1C7B8),
+            padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+          child: const Text(
+            'Tirar outra foto',
+            style: TextStyle(color: Colors.black),
+          ),
+        ),
       ],
     );
   }
