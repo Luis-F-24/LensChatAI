@@ -38,7 +38,14 @@ class AnalyzerPage extends StatelessWidget {
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: ImageAnalyzerWidget(imageFile: imageFile),
+        child: Column(
+          children: [
+            Expanded(
+              child: ImageAnalyzerWidget(imageFile: imageFile),
+            ),
+            const SizedBox(height: 80),  // Mantém espaço para o FAB
+          ],
+        ),
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _onRetakePhoto(context),

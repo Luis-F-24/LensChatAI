@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:io';
-import '../Widgets/api_service.dart';
-import '../Widgets/tts_helper.dart';
-import '../Pages/home_page.dart';
+import '../services/api_service.dart';
+import '../services/tts_helper.dart'; 
 
 class ImageAnalyzerWidget extends StatefulWidget {
   final File imageFile;
@@ -25,14 +24,8 @@ class _ImageAnalyzerWidgetState extends State<ImageAnalyzerWidget> {
     super.dispose();
   }
 
-  void _onRetakePhoto() {
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const HomePage()),
-    );
-  }
-
   Future<void> _analyzeImage() async {
-    if (_analyzed) return; // ✅ Evita múltiplas execuções
+    if (_analyzed) return; // Evita múltiplas execuções
 
     setState(() {
       _isLoading = true;
@@ -48,6 +41,8 @@ class _ImageAnalyzerWidgetState extends State<ImageAnalyzerWidget> {
 
     if (description != null) {
       await _ttsHelper.speak(description);
+      
+      // Removido o salvamento no histórico
     }
   }
 
@@ -83,7 +78,7 @@ class _ImageAnalyzerWidgetState extends State<ImageAnalyzerWidget> {
           ElevatedButton(
             onPressed: () {
               setState(() {
-                _analyzed = false; // ✅ Permite nova tentativa
+                _analyzed = false; // Permite nova tentativa
               });
               _analyzeImage();
             },
@@ -91,7 +86,11 @@ class _ImageAnalyzerWidgetState extends State<ImageAnalyzerWidget> {
           ),
         const SizedBox(height: 20),
         ElevatedButton(
-          onPressed: _onRetakePhoto,
+          onPressed: () {
+            if (_description != null) {
+              _ttsHelper.speak(_description!);
+            }
+          },
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xFFD1C7B8),
             padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
@@ -100,7 +99,7 @@ class _ImageAnalyzerWidgetState extends State<ImageAnalyzerWidget> {
             ),
           ),
           child: const Text(
-            'Tirar outra foto',
+            'Ouvir novamente',
             style: TextStyle(color: Colors.black),
           ),
         ),
