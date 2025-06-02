@@ -41,8 +41,6 @@ class _ImageAnalyzerWidgetState extends State<ImageAnalyzerWidget> {
 
     if (description != null) {
       await _ttsHelper.speak(description);
-      
-      // Removido o salvamento no histórico
     }
   }
 
@@ -78,7 +76,7 @@ class _ImageAnalyzerWidgetState extends State<ImageAnalyzerWidget> {
           ElevatedButton(
             onPressed: () {
               setState(() {
-                _analyzed = false; // Permite nova tentativa
+                _analyzed = false;
               });
               _analyzeImage();
             },

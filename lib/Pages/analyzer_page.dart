@@ -1,17 +1,30 @@
 import 'package:flutter/material.dart';
 import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 import '../widgets/image_analyzer_widget.dart';
-import 'home_page.dart';
 
-class AnalyzerPage extends StatelessWidget {
+class AnalyzerPage extends StatefulWidget {
   final File imageFile;
 
   const AnalyzerPage({super.key, required this.imageFile});
 
-  void _onRetakePhoto(BuildContext context) {
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const HomePage()),
-    );
+  @override
+  State<AnalyzerPage> createState() => _AnalyzerPageState();
+}
+
+class _AnalyzerPageState extends State<AnalyzerPage> {
+  final ImagePicker _picker = ImagePicker();
+
+  Future<void> _onRetakePhoto() async {
+    final XFile? pickedFile = await _picker.pickImage(source: ImageSource.camera);
+
+    if (pickedFile != null) {
+      final File newImage = File(pickedFile.path);
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => AnalyzerPage(imageFile: newImage)),
+      );
+    } else {
+    }
   }
 
   @override
@@ -41,14 +54,14 @@ class AnalyzerPage extends StatelessWidget {
         child: Column(
           children: [
             Expanded(
-              child: ImageAnalyzerWidget(imageFile: imageFile),
+              child: ImageAnalyzerWidget(imageFile: widget.imageFile),
             ),
-            const SizedBox(height: 80),  // Mantém espaço para o FAB
+            const SizedBox(height: 80),
           ],
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _onRetakePhoto(context),
+        onPressed: _onRetakePhoto,
         backgroundColor: const Color(0xFFD1C7B8),
         label: const Text(
           'Tirar outra foto',

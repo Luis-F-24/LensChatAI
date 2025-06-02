@@ -2,16 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'dart:io';
 import 'package:logger/logger.dart';
-import 'package:permission_handler/permission_handler.dart'; // ✅ Importe permission_handler aqui
+import 'package:permission_handler/permission_handler.dart';
 
 class CameraCaptureWidget extends StatefulWidget {
   final Function(File) onImageCaptured;
-  final List<CameraDescription> availableCameras; // ✅ Adicione este parâmetro
+  final List<CameraDescription> availableCameras;
 
   const CameraCaptureWidget({
     super.key,
     required this.onImageCaptured,
-    required this.availableCameras, // ✅ Requer a lista de câmeras
+    required this.availableCameras,
   });
 
   @override
@@ -31,7 +31,6 @@ class _CameraCaptureWidgetState extends State<CameraCaptureWidget> {
   }
 
   Future<void> _initializeCamera() async {
-    // ✅ PASSO CRUCIAL: Solicitar permissões em tempo de execução
     final cameraStatus = await Permission.camera.request();
     final microphoneStatus = await Permission.microphone.request();
 
@@ -40,7 +39,7 @@ class _CameraCaptureWidgetState extends State<CameraCaptureWidget> {
         _errorMessage = 'Permissão da câmera ou microfone negada. Por favor, conceda as permissões nas configurações do aplicativo para usar a câmera.';
       });
       _logger.e(_errorMessage);
-      return; // Impede a inicialização da câmera se a permissão for negada
+      return;
     }
 
     if (cameraStatus.isPermanentlyDenied || microphoneStatus.isPermanentlyDenied) {
@@ -48,11 +47,10 @@ class _CameraCaptureWidgetState extends State<CameraCaptureWidget> {
         _errorMessage = 'Permissão da câmera ou microfone negada permanentemente. Vá para as configurações do aplicativo para habilitar.';
       });
       _logger.e(_errorMessage);
-      openAppSettings(); // Abre as configurações do aplicativo para o usuário habilitar manualmente
-      return; // Impede a inicialização da câmera se a permissão for negada permanentemente
+      openAppSettings();
+      return;
     }
 
-    // Apenas se as permissões foram concedidas, proceda com a inicialização da câmera
     try {
       final cameras = widget.availableCameras;
 
@@ -74,7 +72,6 @@ class _CameraCaptureWidgetState extends State<CameraCaptureWidget> {
 
       await _controller?.initialize();
 
-      // Verifica se o widget ainda está montado antes de chamar setState
       if (!mounted || _controller == null || !_controller!.value.isInitialized) {
         _logger.w('Controlador da câmera não inicializado ou widget desmontado.');
         return;

@@ -8,14 +8,14 @@ class TtsHelper {
   }
 
   Future<void> _initTts() async {
-    await _flutterTts.setLanguage("pt-BR");  // Português do Brasil
-    await _flutterTts.setSpeechRate(0.5);    // Velocidade normal
-    await _flutterTts.setPitch(1.0);         // Tom normal
+    await _flutterTts.setLanguage("pt-BR");
+    await _flutterTts.setSpeechRate(0.5);
+    await _flutterTts.setPitch(1.0);
   }
 
   Future<void> speak(String text) async {
     if (text.isEmpty) return;
-    await _flutterTts.stop();    // Para qualquer fala anterior antes de falar nova
+    await _flutterTts.stop();
     await _flutterTts.speak(text);
   }
 

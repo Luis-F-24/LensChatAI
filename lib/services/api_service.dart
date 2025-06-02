@@ -1,5 +1,3 @@
-// Seu arquivo api_service.dart (ou onde analyzeImageWithGemini está)
-
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
@@ -24,7 +22,6 @@ Future<String?> analyzeImageWithGemini(File imageFile) async {
     final bytes = await imageFile.readAsBytes();
     final base64Image = base64Encode(bytes);
 
-    // ✅ Melhorias no 'contents' e 'generationConfig'
     final response = await http.post(
       Uri.parse('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=$geminiKey'),
       headers: {
@@ -34,9 +31,7 @@ Future<String?> analyzeImageWithGemini(File imageFile) async {
         "contents": [
           {
             "parts": [
-              // ✅ Novo System Prompt: Guia o modelo sobre seu papel e tom
               {"text": "Você é um assistente de inteligência artificial otimizado para descrever o conteúdo de imagens de forma clara, concisa e precisa. Suas respostas devem ser sempre em português brasileiro. Foque em identificar objetos, pessoas, ações e o ambiente principal da imagem."},
-              // ✅ Novo User Prompt: Detalha o que se espera na descrição
               {"text": "Descreva a imagem que você vai receber. Crie uma descrição direta, com 1 a 3 frases, destacando os elementos visuais mais relevantes e o contexto geral."},
               {
                 "inlineData": {
@@ -48,20 +43,19 @@ Future<String?> analyzeImageWithGemini(File imageFile) async {
           }
         ],
         "generationConfig": {
-          "maxOutputTokens": 150, // ✅ Ajustado para promover concisão, mas com algum detalhe
-          "temperature": 0.4,     // ✅ Adicionado: Controla a aleatoriedade. Valor baixo para respostas mais focadas.
-          "topP": 1.0,            // ✅ Adicionado: Top P sampling. Comum de se usar com temperature.
-          "topK": 32,             // ✅ Adicionado: Top K sampling. Comum de se usar com temperature.
+          "maxOutputTokens": 150,
+          "temperature": 0.4,
+          "topP": 1.0,
+          "topK": 32,
         }
       }),
     );
 
     _logger.i('Status da resposta: ${response.statusCode}');
-    _logger.d('Corpo da resposta: ${response.body}'); // Adicionado para depuração detalhada
+    _logger.d('Corpo da resposta: ${response.body}');
 
     if (response.statusCode == 200) {
       final decoded = jsonDecode(response.body);
-      // ✅ Adicionado verificação de 'candidates' e 'content'
       if (decoded['candidates'] != null && decoded['candidates'].isNotEmpty) {
         final content = decoded['candidates'][0]['content']['parts'][0]['text'];
         _logger.i('Descrição recebida: $content');

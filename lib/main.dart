@@ -11,10 +11,6 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await dotenv.load(fileName: ".env");
-
-  // Removido o init do HistoryService e inicialização Hive
-
-  // Inicializar câmeras (mantido como está)
   try {
     cameras = await availableCameras();
     _logger.i('Câmeras disponíveis (main.dart): ${cameras.length} câmera(s) encontrada(s).');
