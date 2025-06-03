@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:camera/camera.dart';
 import 'package:logger/logger.dart';
+import 'package:hive_flutter/hive_flutter.dart'; // ✅ Importação do Hive
+import 'models/history_item.dart'; // ✅ Importação do modelo para registrar o adapter
 import 'Pages/home_page.dart';
 
 List<CameraDescription> cameras = [];
@@ -11,6 +13,12 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await dotenv.load(fileName: ".env");
+
+  // ✅ Inicialização do Hive
+  await Hive.initFlutter();
+  Hive.registerAdapter(HistoryItemAdapter());
+  await Hive.openBox<HistoryItem>('history');
+
   try {
     cameras = await availableCameras();
     _logger.i('Câmeras disponíveis (main.dart): ${cameras.length} câmera(s) encontrada(s).');

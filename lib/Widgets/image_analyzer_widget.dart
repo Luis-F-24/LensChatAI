@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'dart:io';
+import 'package:path_provider/path_provider.dart';
+// ignore: depend_on_referenced_packages
+import 'package:path/path.dart' as path;
 import '../services/api_service.dart';
-import '../services/tts_helper.dart'; 
+import '../services/tts_helper.dart';
+import '../services/history_service.dart';
 
 class ImageAnalyzerWidget extends StatefulWidget {
   final File imageFile;
@@ -17,6 +21,7 @@ class _ImageAnalyzerWidgetState extends State<ImageAnalyzerWidget> {
   bool _isLoading = false;
   bool _analyzed = false;
   final TtsHelper _ttsHelper = TtsHelper();
+  final HistoryService _historyService = HistoryService();
 
   @override
   void dispose() {
@@ -24,8 +29,16 @@ class _ImageAnalyzerWidgetState extends State<ImageAnalyzerWidget> {
     super.dispose();
   }
 
+  /// ✅ Função para salvar a imagem permanentemente
+  Future<String> saveImagePermanently(File imageFile) async {
+    final directory = await getApplicationDocumentsDirectory();
+    final fileName = path.basename(imageFile.path);
+    final savedImage = await imageFile.copy('${directory.path}/$fileName');
+    return savedImage.path;
+  }
+
   Future<void> _analyzeImage() async {
-    if (_analyzed) return; // Evita múltiplas execuções
+    if (_analyzed) return;
 
     setState(() {
       _isLoading = true;
@@ -41,6 +54,15 @@ class _ImageAnalyzerWidgetState extends State<ImageAnalyzerWidget> {
 
     if (description != null) {
       await _ttsHelper.speak(description);
+
+      // ✅ Salvar imagem em local permanente
+      final savedImagePath = await saveImagePermanently(widget.imageFile);
+
+      // ✅ Salvar no histórico com o novo caminho
+      await _historyService.addToHistory(
+        savedImagePath,
+        description,
+      );
     }
   }
 

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import '../widgets/image_analyzer_widget.dart';
+import 'history_page.dart';
+import 'home_page.dart';
 
 class AnalyzerPage extends StatefulWidget {
   final File imageFile;
@@ -13,18 +15,20 @@ class AnalyzerPage extends StatefulWidget {
 }
 
 class _AnalyzerPageState extends State<AnalyzerPage> {
+  // ignore: unused_field
   final ImagePicker _picker = ImagePicker();
 
-  Future<void> _onRetakePhoto() async {
-    final XFile? pickedFile = await _picker.pickImage(source: ImageSource.camera);
+  void _onRetakePhoto() {
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const HomePage()),
+      (Route<dynamic> route) => false,
+    );
+  }
 
-    if (pickedFile != null) {
-      final File newImage = File(pickedFile.path);
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => AnalyzerPage(imageFile: newImage)),
-      );
-    } else {
-    }
+  void _goToHistory() {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const HistoryPage()),
+    );
   }
 
   @override
@@ -48,6 +52,12 @@ class _AnalyzerPageState extends State<AnalyzerPage> {
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.of(context).pop(),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.history, color: Colors.white),
+            onPressed: _goToHistory,
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
