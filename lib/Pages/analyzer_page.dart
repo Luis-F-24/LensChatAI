@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
+import 'package:flutter_tts/flutter_tts.dart';  // <-- Import do TTS
 import '../widgets/image_analyzer_widget.dart';
 import 'history_page.dart';
 import 'home_page.dart';
@@ -17,18 +18,29 @@ class AnalyzerPage extends StatefulWidget {
 class _AnalyzerPageState extends State<AnalyzerPage> {
   // ignore: unused_field
   final ImagePicker _picker = ImagePicker();
+  final FlutterTts _flutterTts = FlutterTts();
 
-  void _onRetakePhoto() {
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => const HomePage()),
-      (Route<dynamic> route) => false,
+  Future<void> ttsStop() async {
+    await _flutterTts.stop();
+  }
+
+  void _onRetakePhoto() async {
+    await ttsStop();
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const HomePage(startWithCamera: true)),
     );
   }
 
-  void _goToHistory() {
+  void _goToHistory() async {
+    await ttsStop();
     Navigator.of(context).push(
       MaterialPageRoute(builder: (_) => const HistoryPage()),
     );
+  }
+
+  void _onBack() async {
+    await ttsStop();
+    Navigator.of(context).pop();
   }
 
   @override
@@ -50,12 +62,12 @@ class _AnalyzerPageState extends State<AnalyzerPage> {
         ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: _onBack,  // <-- Usar o método com ttsStop
         ),
         actions: [
           IconButton(
             icon: const Icon(Icons.history, color: Colors.white),
-            onPressed: _goToHistory,
+            onPressed: _goToHistory,  // <-- Usar o método com ttsStop
           ),
         ],
       ),
@@ -71,7 +83,7 @@ class _AnalyzerPageState extends State<AnalyzerPage> {
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: _onRetakePhoto,
+        onPressed: _onRetakePhoto,  // <-- Usar o método com ttsStop
         backgroundColor: const Color(0xFFD1C7B8),
         label: const Text(
           'Tirar outra foto',

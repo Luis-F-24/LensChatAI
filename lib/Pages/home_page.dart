@@ -5,14 +5,22 @@ import '../main.dart' as app_main;
 import 'analyzer_page.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  final bool startWithCamera;
+
+  const HomePage({super.key, this.startWithCamera = false});
 
   @override
   State<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
-  bool _showCamera = false;
+  late bool _showCamera;
+
+  @override
+  void initState() {
+    super.initState();
+    _showCamera = widget.startWithCamera;
+  }
 
   void _onImageCaptured(File image) {
     Navigator.of(context).push(
